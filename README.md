@@ -42,11 +42,18 @@ the environment.
 
 ## Example
 
+Start a shell with the parsec client code
+
 ```
 $ make all shell
 Erlang/OTP 25 [erts-13.1.2] [source] [64-bit] [smp:16:16] [ds:16:16:10] [async-threads:1] [jit:ns]
 
 Eshell V13.1.2  (abort with ^G)
+```
+
+Create a session object. It keeps track of the service endpoint,
+available providers and their capabilities.
+```
 1> S = parsec:init(#{service_endpoint => <<"/tmp/parsec.sock">>}).
 {parsec,<<"/tmp/parsec.sock">>,
         [#{description =>
@@ -66,6 +73,11 @@ Eshell V13.1.2  (abort with ^G)
         3,
         <<232,3,0,0>>,
         785540712}
+```
+
+List available providers.
+
+```
 2> parsec:list_providers(S).
 {ok,#{providers =>
           [#{description =>
@@ -78,8 +90,18 @@ Eshell V13.1.2  (abort with ^G)
              id => 0,uuid => <<"47049873-2a43-4845-9d72-831eab668784">>,
              vendor => <<>>,version_maj => 1,version_min => 0,
              version_rev => 0}]}}
+```
+
+Create a 2048 bit RSA keypair named `test`.
+
+```
 3> parsec:create_rsa_key(S, <<"test">>, #{}).
 {ok,#{}}
+```
+
+List available keys.
+
+```
 4> parsec:list_keys(S).
 {ok,#{keys =>
           [#{attributes =>
@@ -96,22 +118,41 @@ Eshell V13.1.2  (abort with ^G)
                                verify_hash => false,verify_message => false}},
                    key_type => #{variant => {rsa_key_pair,#{}}}},
              name => <<"test">>,provider_id => 3}]}}
-5> parsec:asymmetric_encrypt(S, <<"test">>, <<"The quick brown fox jumps over the lazy dog.">>).
-{ok,#{ciphertext =>
-          <<164,170,77,51,18,173,137,95,4,89,124,228,102,121,74,
-            130,144,181,208,69,150,65,6,195,206,151,...>>}}
-6> {ok, #{ciphertext := Ciphertext}} = parsec:asymmetric_encrypt(S, <<"test">>, <<"The quick brown fox jumps over the lazy dog.">>).
+```
+
+Encrypt some text using the newly created `test` key.
+
+```
+5> {ok, #{ciphertext := Ciphertext}} = parsec:asymmetric_encrypt(S, <<"test">>, <<"The quick brown fox jumps over the lazy dog.">>).
 {ok,#{ciphertext =>
           <<161,48,172,200,80,49,176,86,197,86,251,44,162,150,241,
             213,89,73,107,8,171,252,91,3,117,101,...>>}}
-7> parsec:asymmetric_decrypt(S, <<"test">>, Ciphertext).
+```
+
+Decrypt the resulting ciphertext.
+
+```
+6> parsec:asymmetric_decrypt(S, <<"test">>, Ciphertext).
 {ok,#{plaintext =>
           <<"The quick brown fox jumps over the lazy dog.">>}}
-8> parsec:destroy_key(S, <<"test">>).
+```
+
+Cleanup, remove the test key.
+
+```
+7> parsec:destroy_key(S, <<"test">>).
 {ok,#{}}
-9> parsec:list_keys(S).
+```
+
+List the available keys to ensure it has been deleted.
+
+```
+8> parsec:list_keys(S).
 {ok,#{keys => []}}
 ```
+
+The same operations can be executed using the `test/1` function in the
+`parsec` module.
 
 ## Low level API
 
