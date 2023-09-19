@@ -1,7 +1,7 @@
 # Parsec Erlang Client
 
 This repository contains an Erlang based client for consuming the
-API provided by the [Parsec service]
+API provided by the Parsec service
 (https://github.com/parallaxsecond/parsec).
 
 It communicates with the Parsec server over a Unix Domain Socket. The

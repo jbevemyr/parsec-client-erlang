@@ -50,6 +50,8 @@
           session_handle
         }).
 
+-type session() :: #parsec{}.
+
 -type opts() ::
         #{ service_endpoint => binary(),
            auth             => none | uid | token | jwt | direct,
@@ -59,7 +61,7 @@
            direct           => binary()
          }.
 
--spec init(Opts::opts()) -> #parsec{} | {error, term()}.
+-spec init(Opts::opts()) -> session() | {error, term()}.
 
 init() ->
     init(#{}).
@@ -114,6 +116,9 @@ get_uid() ->
     Digits = lists:takewhile(fun(C) -> C >= $0 andalso C =< $9 end, UidStr),
     ?l2i([$0|Digits]).
 
+-spec destroy_key(session(), Name::binary()) ->
+          {ok, map()} | {error, Reason::term()}.
+
 destroy_key(S, Name) ->
     case list_keys(S) of
         {ok, #{keys := Keys}} ->
@@ -137,6 +142,13 @@ find_key([K|Ks], Name) ->
         _ ->
             find_key(Ks, Name)
     end.
+
+-type rsa_key_opts() :: #{
+                          bits  => non_neg_integer()
+                         }.
+
+-spec create_rsa_key(session(), Name::binary(), Opts::rsa_key_opts()) ->
+          {ok, map()} | {error, Reason::term()}.
 
 create_rsa_key(S, Name, Opts) ->
     case get_crypto_provider(S, psa_generate_key) of
@@ -169,6 +181,13 @@ create_rsa_key(S, Name, Opts) ->
                                    }}}},
             send_request(S, Provider, {psa_generate_key, Params})
     end.
+
+-type ecc_key_opts() :: #{
+                          bits  => non_neg_integer()
+                         }.
+
+-spec create_ecc_key(session(), Name::binary(), Opts::ecc_key_opts()) ->
+          {ok, map()} | {error, Reason::term()}.
 
 create_ecc_key(S, Name, Opts) ->
     case get_crypto_provider(S, psa_generate_key) of
@@ -207,20 +226,35 @@ create_ecc_key(S, Name, Opts) ->
             send_request(S, Provider, {psa_generate_key, Params})
     end.
 
+-spec list_opcodes(S::session(), Provider::non_neg_integer()) ->
+          {ok, #{opcodes => [non_neg_integer()]}} | {error, Reason::term()}.
+
 list_opcodes(S, Provider) ->
     send_request(S, 0, {list_opcodes, #{provider_id => Provider}}).
+
+-spec list_providers(S::session()) ->
+          {ok, #{providers => [Provider::map()]}}.
 
 list_providers(S) ->
     Provider = 0,
     send_request(S, Provider, {list_providers, #{}}).
 
+-spec list_keys(S::session()) ->
+          {ok, #{keys => [Keys::map()]}}.
+
 list_keys(S) ->
     Provider = 0,
     send_request(S, Provider, {list_keys, #{}}).
 
+-spec ping(S::session()) ->
+          {ok, #{}} | {error, Reason::term()}.
+
 ping(S) ->
     Provider = 0,
     send_request(S, Provider, {ping, #{}}).
+
+-spec asymmetric_encrypt(S::session(), Key::binary(), Plaintext::binary()) ->
+          {ok, #{ciphertext => binary()}} | {error, Reason::term()}.
 
 asymmetric_encrypt(S, Key, Plaintext) ->
     case get_crypto_provider(S, psa_asymmetric_encrypt) of
@@ -233,6 +267,9 @@ asymmetric_encrypt(S, Key, Plaintext) ->
                             alg => #{variant => {rsa_pkcs1v15_crypt, #{}}},
                             plaintext => Plaintext}})
     end.
+
+-spec asymmetric_decrypt(S::session(), Key::binary(), Ciphertext::binary()) ->
+          {ok, #{plaintext => binary()}} | {error, Reason::term()}.
 
 asymmetric_decrypt(S, Key, Ciphertext) ->
     case get_crypto_provider(S, psa_asymmetric_decrypt) of
