@@ -7,11 +7,11 @@ BUILD_DEPS = parsec_operations gpb
 dep_parsec_operations = git https://github.com/parallaxsecond/parsec-operations.git \
 		87cef311988fccf0d766fe778d0c7aed856293d1
 
-PARSEC_PROTO_SRC_FILES = $(wildcard deps/parsec_operations/protobuf/*.proto)
-PARSEC_PROTO_ERL_FILES = $(patsubst deps/parsec_operations/protobuf/%.proto, src/%.erl, $(PARSEC_PROTO_SRC_FILES))
+PARSEC_PROTO_SRC_FILES = $(wildcard $(DEPS_DIR)/parsec_operations/protobuf/*.proto)
+PARSEC_PROTO_ERL_FILES = $(patsubst $(DEPS_DIR)/parsec_operations/protobuf/%.proto, src/%.erl, $(PARSEC_PROTO_SRC_FILES))
 
-src/%.erl: deps/parsec_operations/protobuf/%.proto
-	deps/gpb/bin/protoc-erl -maps -pkgs -strbin -o src -Ideps/parsec_operations/protobuf $<
+src/%.erl: $(DEPS_DIR)/parsec_operations/protobuf/%.proto
+	$(DEPS_DIR)/gpb/bin/protoc-erl -maps -pkgs -strbin -o src -I$(DEPS_DIR)/parsec_operations/protobuf $<
 
 include erlang.mk
 
