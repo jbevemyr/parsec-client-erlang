@@ -724,7 +724,7 @@ test(Opts) ->
                             (_) ->
                                  false
                          end, NewKeys),
-    ?liof("destoy key\n", []),
+    ?liof("destroy key\n", []),
     ok.
 
 %%
