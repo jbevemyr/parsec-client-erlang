@@ -2,9 +2,10 @@
 
 This repository contains an Erlang based client for consuming the
 API provided by the Parsec service
-(https://github.com/parallaxsecond/parsec).
+(https://github.com/parallaxsecond/parsec). It provides a convenient
+way of integrating with a TPM or HSM from Erlang.
 
-It communicates with the Parsec server over a Unix Domain Socket. The
+The client communicates with the Parsec server over a Unix Domain Socket. The
 socket is located using the [service
 discovery](https://parallaxsecond.github.io/parsec-book/parsec_client/api_overview.html#service-discovery)
 policy to find the Parsec endpoint. For example, if the socket is
